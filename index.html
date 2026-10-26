@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delta Force Auto Harmonica - Standalone Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.28/build/Midi.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0e17; --card: #121929; --border: #1f2d47;
+            --amber: #f59e0b; --cyan: #06b6d4; --emerald: #10b981; --rose: #f43f5e;
+            --text-main: #e2e8f0; --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+        .header { background: rgba(18, 25, 41, 0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .logo-wrap { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(45deg, #d97706, #f59e0b); display: flex; justify-content: center; align-items: center; color: black; font-size: 20px; box-shadow: 0 4px 15px rgba(245,158,11,0.2); }
+        .title { font-weight: 800; font-size: 16px; color: white; display: flex; align-items: center; gap: 8px; }
+        .badge { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-family: monospace; }
+        .subtitle { font-size: 11px; color: var(--text-muted); }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .btn { padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; border: none; display: flex; align-items: center; gap: 6px; }
+        .btn-outline { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); }
+        .btn-outline:hover { background: #334155; }
+        .btn-primary { background: var(--amber); color: black; box-shadow: 0 4px 15px rgba(245,158,11,0.2); }
+        .btn-primary:hover { background: #fbbf24; }
+        .bpm-box { background: #020617; border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .bpm-input { background: transparent; border: none; color: var(--amber); font-weight: bold; width: 50px; text-align: center; outline: none; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; width: 100%; }
+        @media(min-width: 992px) { .container { grid-template-columns: 4fr 6fr; } }
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .panel-title { font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .dropzone { border: 2px dashed var(--border); background: rgba(2,6,23,0.7); border-radius: 12px; padding: 20px; text-align: center; position: relative; cursor: pointer; transition: 0.2s; margin-bottom: 12px; }
+        .dropzone:hover { border-color: rgba(245,158,11,0.5); }
+        .dropzone input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .dropzone i { font-size: 30px; color: #475569; margin-bottom: 8px; transition: 0.2s; }
+        .dropzone:hover i { color: var(--amber); transform: scale(1.1); }
+        .dropzone p { font-size: 12px; font-weight: 500; }
+        .dropzone span { color: var(--amber); }
+        textarea { width: 100%; background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 10px; color: var(--cyan); font-family: monospace; font-size: 12px; resize: vertical; outline: none; transition: 0.2s; line-height: 1.5; }
+        textarea:focus { border-color: var(--amber); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .grid-7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+        select, input[type="text"] { width: 100%; background: #020617; border: 1px solid var(--border); border-radius: 6px; padding: 8px; color: var(--amber); font-family: monospace; font-size: 12px; outline: none; transition: 0.2s; }
+        select { color: var(--text-main); }
+        select:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pad-mouse { background: rgba(15,23,42,0.8); border: 1px solid #1e293b; padding: 8px; border-radius: 6px; text-align: center; transition: 0.15s; }
+        .pad-mouse i { font-size: 14px; margin-bottom: 4px; }
+        .pad-mouse span { display: block; font-size: 10px; }
+        .key-input-group { display: flex; flex-direction: column; text-align: center; }
+        .key-input-group span { font-size: 10px; color: var(--text-muted); font-weight: bold; margin-bottom: 2px; }
+        .key-input-group input { text-align: center; text-transform: uppercase; font-weight: bold; }
+        .visualizer-pad { background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; text-align: center; transition: 0.1s; display: flex; flex-direction: column; align-items: center; }
+        .visualizer-pad .note-name { font-size: 10px; color: var(--text-muted); }
+        .visualizer-pad .note-num { font-size: 16px; font-weight: bold; margin: 2px 0; }
+        .visualizer-pad .key-mapped { font-size: 10px; color: var(--amber); background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
+        .key-active { background-color: var(--amber) !important; color: black !important; transform: translateY(-3px) scale(1.05); box-shadow: 0 5px 15px rgba(245,158,11,0.4); }
+        .mouse-active { background-color: rgba(6,182,212,0.2) !important; border-color: var(--cyan) !important; box-shadow: 0 0 10px rgba(6,182,212,0.4); }
+        .tabs { display: flex; background: #020617; border-bottom: 1px solid var(--border); padding: 4px; gap: 4px; }
+        .tab-btn { padding: 8px 12px; font-size: 12px; font-weight: bold; color: var(--text-muted); background: transparent; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .tab-btn.active { background: var(--card); color: var(--amber); border: 1px solid var(--border); border-bottom: none; }
+        .tab-content { display: none; flex-direction: column; flex: 1; padding: 16px; }
+        .tab-content.active { display: flex; }
+        #toast { position: fixed; top: 20px; right: 20px; z-index: 100; background: rgba(15,23,42,0.95); border-left: 4px solid var(--amber); padding: 12px 20px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; transform: translateX(150%); transition: 0.3s ease-out; }
+        #toast.show { transform: translateX(0); }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; background: rgba(15,23,42,0.5); border: 1px solid rgba(30,41,59,0.8); padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        .checkbox-group input { cursor: pointer; }
+        .checkbox-group span { font-size: 11px; color: var(--text-main); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-gap { display: flex; gap: 8px; align-items: center; }
+        .text-xs { font-size: 11px; } .text-muted { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <div id="toast"><i id="toast-icon" class="fa-solid fa-info-circle"></i><span id="toast-msg" class="text-xs font-bold"></span></div>
+
+    <header class="header">
+        <div class="logo-wrap">
+            <div class="logo-icon"><i class="fa-solid fa-gamepad"></i></div>
+            <div>
+                <div class="title">DELTA FORCE <span class="badge">AUTO HARMONICA APP</span></div>
+                <div class="subtitle">Engine: Absolute Float Timing, Meta Parsing & Smart Auto-Fit</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button id="load-sample-btn" class="btn btn-outline"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--amber)"></i> Bản Nhạc Mẫu</button>
+            <div class="bpm-box"><span class="text-muted">BPM:</span><input type="number" id="bpm-input" value="120" min="40" max="300" step="any" class="bpm-input"></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="panel">
+                <div class="flex-between" style="margin-bottom: 12px;">
+                    <div class="panel-title" style="margin:0;"><i class="fa-solid fa-book"></i> Thư Viện Bài Hát</div>
+                    <button id="btn-save-song" class="btn btn-primary" style="padding:4px 8px; font-size:10px;"><i class="fa-solid fa-floppy-disk"></i> Lưu bài hiện tại</button>
+                </div>
+                <div class="flex-gap">
+                    <select id="song-library-select" style="flex:1;">
+                        <option value="">-- Chọn bài hát đã lưu --</option>
+                    </select>
+                    <button id="btn-load-song" class="btn btn-outline" style="padding:6px 10px;"><i class="fa-solid fa-folder-open"></i> Mở</button>
+                    <button id="btn-delete-song" class="btn btn-outline" style="padding:6px 10px; color:var(--rose); border-color:var(--rose);"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-music"></i> 1. Nguồn Nhạc (MIDI / Script)</div>
+                <div id="dropzone" class="dropzone">
+                    <input type="file" id="file-input" accept=".mid,.midi,.ahk,.txt,.py">
+                    <i class="fa-solid fa-file-audio"></i>
+                    <p>Kéo & Thả file MIDI <span>hoặc Script AHK/PY</span> vào đây</p>
+                    <p style="font-size:10px; color:#64748b; margin-top:4px;">App tự động đọc ngược Metadata thành mã nốt</p>
+                </div>
+                <div class="flex-between" style="margin-bottom:6px;">
+                    <label style="margin:0;">Hoặc dán Mã Text Score:</label>
+                    <div class="flex-gap">
+                        <button id="export-midi-btn" class="btn btn-outline" style="padding:4px 8px; font-size:10px; color:var(--emerald); border-color:var(--emerald)"><i class="fa-solid fa-file-export"></i> Xuất MIDI</button>
+                        <button id="clear-score-btn" class="btn btn-outline" style="padding:4px 8px; font-size:10px;"><i class="fa-solid fa-eraser"></i> Xóa</button>
+                    </div>
+                </div>
+                <textarea id="raw-score-input" rows="3" placeholder="Ví dụ: 1:0.5 2:0.5 3:2 5':3 #4:2 3,':1"></textarea>
+            </div>
+
+            <div class="panel">
+                <div class="flex-between" style="margin-bottom: 12px;">
+                    <div class="panel-title" style="margin:0;"><i class="fa-solid fa-keyboard"></i> 2. Ánh Xá Phím</div>
+                    <button id="reset-keys-btn" class="btn btn-outline" style="padding:4px 8px; font-size:10px;">Reset</button>
+                </div>
+                <div class="grid-3" style="margin-bottom: 6px;">
+                    <div class="pad-mouse" id="mouse-left-pad"><i class="fa-solid fa-computer-mouse" style="color:var(--emerald)"></i><span style="color:var(--emerald)">Down ( , )</span><span class="text-muted">Chuột Trái</span></div>
+                    <div class="pad-mouse" id="mouse-mid-pad"><i class="fa-solid fa-computer-mouse" style="color:var(--cyan)"></i><span style="color:var(--cyan)">Thăng ( # )</span><span class="text-muted">Chuột Giữa</span></div>
+                    <div class="pad-mouse" id="mouse-right-pad"><i class="fa-solid fa-computer-mouse" style="color:var(--amber)"></i><span style="color:var(--amber)">High ( ' )</span><span class="text-muted">Chuột Phải</span></div>
+                </div>
+                <div style="text-align:center; font-size:10px; color:var(--text-muted); margin-bottom:16px;">Có thể bấm chung: <code>#'</code>, <code>#,</code>, <code>,'</code></div>
+                <div class="flex-between" style="margin-bottom: 8px;">
+                    <span class="text-xs text-muted">7 phím nốt cơ bản:</span>
+                    <select id="preset-keymap" style="width:auto; padding:2px 6px;">
+                        <option value="zxcvbnm">Hàng Z X C V B N M</option>
+                        <option value="numbers">Hàng 1 2 3 4 5 6 7</option>
+                    </select>
+                </div>
+                <div class="grid-7" id="key-inputs-container"></div>
+                <div class="flex-between" style="gap:10px; margin-top:12px;">
+                    <label class="checkbox-group" style="margin:0; flex:1;"><input type="checkbox" id="chk-comma" checked> <span>Phím <b>","</b> cho <b>1'</b></span></label>
+                    <label class="checkbox-group" style="margin:0; flex:1;"><input type="checkbox" id="chk-autofit"> <span id="autofit-label">Tự dịch giọng MIDI</span></label>
+                    <label class="checkbox-group" style="margin:0; flex:1; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.05);"><input type="checkbox" id="chk-loop"> <span style="color:var(--emerald); font-weight:bold;"><i class="fa-solid fa-repeat"></i> Lặp</span></label>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title"><i class="fa-solid fa-sliders"></i> 3. Tiền Xử Lý (Áp dụng MIDI)</div>
+                <div class="grid-2">
+                    <div><label>Dịch Tông (Octave):</label>
+                        <select id="opt-octave">
+                            <option value="-2">Hạ -2</option><option value="-1">Hạ -1</option><option value="0" selected>Tông Gốc</option><option value="1">Nâng +1</option><option value="2">Nâng +2</option>
+                        </select>
+                    </div>
+                    <div><label>Lọc Lặng (Beat):</label>
+                        <select id="opt-minbeat">
+                            <option value="0.03125">Lọc &lt; 0.03125</option><option value="0.0625">Lọc &lt; 0.0625</option><option value="0.125">Lọc &lt; 0.125</option>
+                        </select>
+                    </div>
+                    <div><label style="color:var(--amber)">Xử lý Hợp âm:</label>
+                        <select id="opt-chord" style="border-color:rgba(245,158,11,0.5); color:var(--amber)">
+                            <option value="top">Chỉ lấy nốt cao nhất</option><option value="all">Giữ nguyên (Cảnh báo delay)</option>
+                        </select>
+                    </div>
+                    <div><label style="color:var(--rose)">Diệt Nốt Lướt (Chỉ cho MIDI):</label>
+                        <select id="opt-short" style="border-color:rgba(244,63,94,0.5); color:var(--rose)">
+                            <option value="0">Tắt</option><option value="0.0625">Cắt &lt; 0.0625</option><option value="0.125" selected>Cắt &lt; 0.125</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:20px;">
+            <div class="panel" style="margin-bottom:0;">
+                <div class="flex-between" style="margin-bottom: 16px;">
+                    <div class="panel-title" style="margin:0;"><i class="fa-solid fa-headphones"></i> Nghe Thử Trực Tiếp</div>
+                    <div class="flex-gap">
+                        <button id="btn-play" class="btn btn-primary"><i class="fa-solid fa-play"></i> Phát</button>
+                        <button id="btn-stop" class="btn btn-outline"><i class="fa-solid fa-square"></i> Dừng</button>
+                    </div>
+                </div>
+                <div style="background:#020617; border:1px solid var(--border); border-radius:12px; padding:16px;">
+                    <div class="grid-7" id="harmonica-visualizer"></div>
+                    <div class="flex-between" style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.05); font-family:monospace; font-size:11px;">
+                        <span id="ui-time" class="text-muted">Thời lượng: 00:00</span>
+                        <span id="ui-note" style="color:var(--amber); font-weight:bold;">Nốt: --</span>
+                        <span id="ui-status" class="text-muted">Sẵn sàng</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="flex:1; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+                <div class="tabs">
+                    <button class="tab-btn active" data-target="tab-ahk2"><i class="fa-solid fa-bolt" style="color:var(--amber)"></i> AHK v2</button>
+                    <button class="tab-btn" data-target="tab-ahk1"><i class="fa-solid fa-code" style="color:var(--cyan)"></i> AHK v1</button>
+                    <button class="tab-btn" data-target="tab-py"><i class="fa-brands fa-python" style="color:var(--emerald)"></i> Python</button>
+                    <button class="tab-btn" data-target="tab-txt"><i class="fa-solid fa-align-left"></i> Score Text</button>
+                </div>
+                <div id="tab-ahk2" class="tab-content active">
+                    <div class="flex-between" style="margin-bottom:12px;">
+                        <span class="text-xs text-muted">Kịch bản v2 (Dùng QPC tuyệt đối không trôi nhịp)</span>
+                        <div class="flex-gap">
+                            <button class="btn btn-outline btn-copy" data-target="out-ahk2"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button class="btn btn-primary btn-dl" data-target="out-ahk2" data-ext="ahk"><i class="fa-solid fa-download"></i> Tải .ahk</button>
+                            <button id="btn-run-direct" class="btn" style="background:var(--rose); color:white;"><i class="fa-solid fa-rocket"></i> Chạy luôn</button>
+                        </div>
+                    </div>
+                    <textarea id="out-ahk2" style="flex:1; color:var(--amber)" readonly></textarea>
+                </div>
+                <div id="tab-ahk1" class="tab-content">
+                    <div class="flex-between" style="margin-bottom:12px;">
+                        <span class="text-xs text-muted">Kịch bản v1 (File tự động encode UTF-8 BOM)</span>
+                        <div class="flex-gap">
+                            <button class="btn btn-outline btn-copy" data-target="out-ahk1"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button class="btn btn-outline btn-dl" data-target="out-ahk1" data-ext="ahk"><i class="fa-solid fa-download"></i> Tải .ahk</button>
+                        </div>
+                    </div>
+                    <textarea id="out-ahk1" style="flex:1; color:var(--cyan)" readonly></textarea>
+                </div>
+                <div id="tab-py" class="tab-content">
+                    <div class="flex-between" style="margin-bottom:12px;">
+                        <span class="text-xs text-muted">Python (Thread an toàn, hỗ trợ Combo chuột)</span>
+                        <div class="flex-gap">
+                            <button class="btn btn-outline btn-copy" data-target="out-py"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button class="btn btn-primary btn-dl" data-target="out-py" data-ext="py" style="background:var(--emerald); box-shadow:none;"><i class="fa-solid fa-download"></i> Tải .py</button>
+                        </div>
+                    </div>
+                    <textarea id="out-py" style="flex:1; color:var(--emerald)" readonly></textarea>
+                </div>
+                <div id="tab-txt" class="tab-content">
+                    <div class="flex-between" style="margin-bottom:12px;">
+                        <span class="text-xs text-muted">Mã Text Thô (Dùng chung bộ xử lý thời gian)</span>
+                        <div class="flex-gap">
+                            <button class="btn btn-outline btn-copy" data-target="out-txt"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button class="btn btn-outline btn-dl" data-target="out-txt" data-ext="txt"><i class="fa-solid fa-download"></i> Tải .txt</button>
+                        </div>
+                    </div>
+                    <textarea id="out-txt" style="flex:1; color:white" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            bpm: 120, srcBpm: 120, keyMap: { "1":"z", "2":"x", "3":"c", "4":"v", "5":"b", "6":"n", "7":"m" },
+            rawMidi: null, notesData: [], autoSemi: 0,
+            audioCtx: null, previewNodes: [], pumpTimer: null, uiTimer: null, isPlaying: false,
+            debounceTimer: null, uiTimeline: [], library: [], currentName: ""
+        };
+        const noteNames = ["1", "#1", "2", "#2", "3", "4", "#4", "5", "#5", "6", "#6", "7"];
+        const baseMidiC4 = 60;
+
+        const els = {
+            rawScore: document.getElementById('raw-score-input'),
+            bpm: document.getElementById('bpm-input'), file: document.getElementById('file-input'),
+            dropzone: document.getElementById('dropzone'), keyContainer: document.getElementById('key-inputs-container'),
+            presetKey: document.getElementById('preset-keymap'), chkComma: document.getElementById('chk-comma'),
+            chkLoop: document.getElementById('chk-loop'), chkAutofit: document.getElementById('chk-autofit'),
+            optOctave: document.getElementById('opt-octave'), optMinbeat: document.getElementById('opt-minbeat'),
+            optChord: document.getElementById('opt-chord'), optShort: document.getElementById('opt-short'),
+            visualizer: document.getElementById('harmonica-visualizer'),
+            outAhk2: document.getElementById('out-ahk2'), outAhk1: document.getElementById('out-ahk1'),
+            outPy: document.getElementById('out-py'), outTxt: document.getElementById('out-txt'),
+            btnPlay: document.getElementById('btn-play'), btnStop: document.getElementById('btn-stop'),
+            uiTime: document.getElementById('ui-time'), uiNote: document.getElementById('ui-note'),
+            uiStatus: document.getElementById('ui-status'),
+            libSelect: document.getElementById('song-library-select')
+        };
+
+        window.addEventListener('pywebviewready', refreshLibrary);
+        window.onload = () => {
+            renderKeyInputs(); renderVisualizer(); setupEvents(); loadSample();
+            if (!window.pywebview) setTimeout(refreshLibrary, 500);
+        };
+
+        function refreshLibrary() {
+            if (window.pywebview) {
+                window.pywebview.api.load_songs().then(songs => {
+                    state.library = songs;
+                    updateLibraryUI();
+                });
+            } else {
+                state.library = JSON.parse(localStorage.getItem('df_songs') || '[]');
+                updateLibraryUI();
+            }
+        }
+
+        function updateLibraryUI() {
+            els.libSelect.innerHTML = '<option value="">-- Chọn bài hát đã lưu --</option>';
+            state.library.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s.name;
+                opt.innerText = s.name;
+                els.libSelect.appendChild(opt);
+            });
+        }
+
+        function showToast(msg, type='info') {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            let color = type === 'error' ? 'var(--rose)' : type === 'warning' ? 'var(--amber)' : type === 'success' ? 'var(--emerald)' : 'var(--cyan)';
+            let icon = type === 'error' ? 'fa-circle-xmark' : type === 'warning' ? 'fa-triangle-exclamation' : type === 'success' ? 'fa-circle-check' : 'fa-info-circle';
+            t.style.borderLeftColor = color;
+            document.getElementById('toast-icon').className = `fa-solid ${icon}`;
+            document.getElementById('toast-icon').style.color = color;
+            t.classList.add('show');
+            if(state.toastTmr) clearTimeout(state.toastTmr);
+            state.toastTmr = setTimeout(() => t.classList.remove('show'), 4000);
+        }
+
+        function renderKeyInputs() {
+            els.keyContainer.innerHTML = '';
+            ["1","2","3","4","5","6","7"].forEach(n => {
+                let div = document.createElement('div'); div.className = 'key-input-group';
+                div.innerHTML = `<span>${n}</span><input type="text" data-n="${n}" value="${state.keyMap[n]}" maxlength="1">`;
+                els.keyContainer.appendChild(div);
+            });
+            document.querySelectorAll('.key-input-group input').forEach(inp => {
+                inp.oninput = (e) => {
+                    let val = e.target.value.toLowerCase().replace(/[^a-z0-9\,]/g, '');
+                    e.target.value = val;
+                    if(val) { 
+                        const dupes = Object.entries(state.keyMap).filter(([n, k]) => n !== e.target.dataset.n && k === val);
+                        if (dupes.length > 0) showToast(`Phím '${val}' đã được gán! Khuyên dùng phím khác.`, 'error');
+                        state.keyMap[e.target.dataset.n] = val; 
+                        renderVisualizer(); triggerConversion(); 
+                    } else {
+                        e.target.value = state.keyMap[e.target.dataset.n];
+                    }
+                };
+            });
+        }
+        
+        function renderVisualizer() {
+            els.visualizer.innerHTML = '';
+            const names = ["Do","Re","Mi","Fa","Sol","La","Si"];
+            for(let i=1; i<=7; i++) {
+                let div = document.createElement('div'); div.className = 'visualizer-pad'; div.id = `pad-${i}`;
+                div.innerHTML = `<span class="note-name">${names[i-1]}</span><span class="note-num">${i}</span><span class="key-mapped">${state.keyMap[i]}</span>`;
+                els.visualizer.appendChild(div);
+            }
+        }
+
+        function setupEvents() {
+            document.getElementById('btn-save-song').onclick = () => {
+                let name = prompt("Nhập tên bài hát để lưu:", state.currentName || "");
+                if (!name) return;
+                let score = els.outTxt.value;
+                let bpm = state.bpm;
+                if (!score) return showToast("Không có nốt để lưu!", "error");
+                
+                if (window.pywebview) {
+                    window.pywebview.api.save_song(name, score, bpm).then(() => {
+                        showToast("Đã lưu vào thư viện!", "success");
+                        refreshLibrary();
+                    });
+                } else {
+                    let songs = JSON.parse(localStorage.getItem('df_songs') || '[]');
+                    let idx = songs.findIndex(s => s.name === name);
+                    if(idx >= 0) songs[idx] = {name, score, bpm};
+                    else songs.push({name, score, bpm});
+                    localStorage.setItem('df_songs', JSON.stringify(songs));
+                    showToast("Đã lưu cục bộ!", "success");
+                    refreshLibrary();
+                }
+            };
+
+            document.getElementById('btn-load-song').onclick = () => {
+                let name = els.libSelect.value;
+                if (!name) return;
+                let song = state.library.find(s => s.name === name);
+                if (song) {
+                    els.rawScore.value = song.score;
+                    els.bpm.value = song.bpm;
+                    state.bpm = song.bpm;
+                    state.srcBpm = song.bpm;
+                    state.rawMidi = null;
+                    state.currentName = name;
+                    triggerConversion(true);
+                    showToast("Đã mở bài: " + name, "success");
+                }
+            };
+
+            document.getElementById('btn-delete-song').onclick = () => {
+                let name = els.libSelect.value;
+                if (!name) return;
+                if(!confirm("Xóa bài: " + name + "?")) return;
+                
+                if (window.pywebview) {
+                    window.pywebview.api.delete_song(name).then(() => {
+                        showToast("Đã xóa!", "success");
+                        refreshLibrary();
+                    });
+                } else {
+                    let songs = JSON.parse(localStorage.getItem('df_songs') || '[]');
+                    songs = songs.filter(s => s.name !== name);
+                    localStorage.setItem('df_songs', JSON.stringify(songs));
+                    showToast("Đã xóa!", "success");
+                    refreshLibrary();
+                }
+            };
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.target).classList.add('active');
+                };
+            });
+
+            els.rawScore.oninput = () => { state.rawMidi = null; triggerConversion(true); };
+            els.bpm.onchange = () => { 
+                let val = Math.max(40, Math.min(300, parseFloat(els.bpm.value)||120));
+                els.bpm.value = val; state.bpm = val; triggerConversion(); 
+            };
+            
+            const reProcess = () => { if(state.rawMidi) processMidiObject(state.rawMidi); else triggerConversion(); };
+            
+            els.optOctave.onchange = reProcess; 
+            els.optMinbeat.onchange = reProcess;
+            els.optChord.onchange = reProcess; 
+            els.optShort.onchange = reProcess;
+            
+            els.chkAutofit.onchange = (e) => {
+                els.optOctave.disabled = e.target.checked;
+                reProcess();
+            };
+            
+            els.chkComma.onchange = triggerConversion; 
+            els.chkLoop.onchange = triggerConversion;
+            
+            els.presetKey.onchange = (e) => {
+                state.keyMap = e.target.value === 'zxcvbnm' ? {"1":"z","2":"x","3":"c","4":"v","5":"b","6":"n","7":"m"} : {"1":"1","2":"2","3":"3","4":"4","5":"5","6":"6","7":"7"};
+                renderKeyInputs(); renderVisualizer(); triggerConversion();
+            };
+            document.getElementById('reset-keys-btn').onclick = () => { els.presetKey.value = 'zxcvbnm'; els.presetKey.dispatchEvent(new Event('change')); };
+            document.getElementById('clear-score-btn').onclick = () => { els.rawScore.value = ''; state.notesData = []; state.rawMidi = null; state.currentName = ""; triggerConversion(); };
+            document.getElementById('load-sample-btn').onclick = loadSample;
+            document.getElementById('export-midi-btn').onclick = exportMIDI;
+
+            window.ondragover = e => e.preventDefault(); window.ondrop = e => e.preventDefault();
+            
+            els.dropzone.onclick = () => els.file.click();
+            els.file.onchange = (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); };
+            els.dropzone.ondragover = (e) => { e.preventDefault(); els.dropzone.style.borderColor = "var(--amber)"; };
+            els.dropzone.ondragleave = () => { els.dropzone.style.borderColor = "var(--border)"; };
+            els.dropzone.ondrop = (e) => { e.preventDefault(); els.dropzone.style.borderColor = "var(--border)"; if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+
+            els.btnPlay.onclick = startAudio; els.btnStop.onclick = stopAudio;
+            
+            document.querySelectorAll('.btn-copy').forEach(btn => {
+                btn.onclick = () => {
+                    let txt = document.getElementById(btn.dataset.target).value;
+                    if(!txt) return showToast('Không có dữ liệu!', 'error');
+                    navigator.clipboard.writeText(txt).then(()=>showToast('Đã Copy!', 'success'));
+                };
+            });
+            document.querySelectorAll('.btn-dl').forEach(btn => {
+                btn.onclick = () => {
+                    let txt = document.getElementById(btn.dataset.target).value;
+                    if(!txt) return showToast('Không có dữ liệu!', 'error');
+                    let blobBits = btn.dataset.ext === 'ahk' ? ["\uFEFF" + txt] : [txt];
+                    let blob = new Blob(blobBits, {type: "text/plain;charset=utf-8"});
+                    let a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                    a.download = `DeltaForce_Auto.${btn.dataset.ext}`; a.click();
+                    URL.revokeObjectURL(a.href); showToast('Đã tải file!', 'success');
+                };
+            });
+
+            document.getElementById('btn-run-direct').onclick = () => {
+                let code = els.outAhk2.value;
+                if(!code) return showToast('Không có dữ liệu!', 'error');
+                
+                code = "#SingleInstance Force\n" + code; 
+
+                if (window.pywebview) {
+                    window.pywebview.api.run_script(code).then(res => {
+                        if(res === 'ok') showToast('Đã nạp Macro! Bấm F8 trong game.', 'success');
+                        else showToast('Lỗi: ' + res, 'error');
+                    });
+                } else {
+                    showToast('Chức năng này chỉ hoạt động khi mở bằng App .exe', 'warning');
+                }
+            };
+        }
+
+        function loadSample() {
+            state.rawMidi = null;
+            els.rawScore.value = "1:0.5 2:0.5 3:2 5':3 #4:2 0:0.5 1, 1' 2' 3':2.5 0:0.5 5, 1:1 2:0.5 3:0.5 4:2 3:1 2:3 3,':1 #4,:1";
+            els.bpm.value = 120; state.bpm = 120; state.srcBpm = 120;
+            state.currentName = "BanNhacMau";
+            triggerConversion(true);
+            showToast("Đã nạp bản nhạc mẫu!", "success");
+        }
+
+        function handleFile(file) {
+            state.currentName = file.name.replace(/\.[^/.]+$/, "");
+            let ext = file.name.split('.').pop().toLowerCase();
+            let reader = new FileReader();
+            if(ext === 'mid' || ext === 'midi') {
+                reader.onload = (e) => {
+                    try {
+                        state.rawMidi = new Midi(e.target.result);
+                        if(state.rawMidi.header.tempos.length > 0) { 
+                            let val = Math.max(40, Math.min(300, parseFloat(state.rawMidi.header.tempos[0].bpm)));
+                            state.bpm = val; els.bpm.value = val;
+                            state.srcBpm = val; 
+                        } else {
+                            state.srcBpm = 120;
+                        }
+                        processMidiObject(state.rawMidi);
+                        showToast(`Nạp MIDI thành công: ${file.name}`, 'success');
+                    } catch(err) { showToast("File MIDI hỏng hoặc không đúng chuẩn!", 'error'); }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.onload = (e) => {
+                    let text = e.target.result;
+                    state.rawMidi = null;
+                    const meta = {};
+                    for (const m of text.matchAll(/^\s*[;#]\s*META_(\w+):\s*(.*?)\s*$/gim)) {
+                        meta[m[1].toUpperCase()] = m[2];
+                    }
+                    if(meta.SCORE) {
+                        let ver = parseInt(meta.VERSION || '1');
+                        if (ver > 2) showToast("Cảnh báo: Script dùng META_VERSION mới, có thể chứa nốt lạ.", "warning");
+                        
+                        if(meta.BPM) { 
+                            let val = Math.max(40, Math.min(300, parseFloat(meta.BPM)));
+                            state.bpm = val; els.bpm.value = val; 
+                            state.srcBpm = val;
+                        }
+                        els.rawScore.value = meta.SCORE.trim();
+                        triggerConversion(true);
+                        showToast(`Dịch ngược thành công từ Metadata!`, 'success');
+                    } else if (ext === 'ahk' || ext === 'py') {
+                        showToast("Script này không có META_SCORE", 'error');
+                    } else {
+                        els.rawScore.value = text; triggerConversion(true);
+                        showToast(`Đã nạp Score Text thô.`, 'info');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            els.file.value = '';
+        }
+
+        function autoFitSemitone(midis) {
+            let best = { s: 0, cost: Infinity };
+            let outOfRangeAtBest = 0;
+            for (let s = -24; s <= 24; s++) {
+                let cost = Math.abs(s) * 0.01;
+                let outOfRange = 0;
+                for (const m of midis) {
+                    const t = m + s;
+                    if (t < 48 || t > 83) { cost += 1; outOfRange++; }
+                }
+                if (cost < best.cost) { best = { s, cost }; outOfRangeAtBest = outOfRange; }
+            }
+            return { s: best.s, outOfRange: outOfRangeAtBest };
+        }
+
+        function processMidiObject(midi) {
+            let allNotes = [];
+            midi.tracks.forEach(t => { t.notes.forEach(n => { if(n.channel !== 9) allNotes.push(n); }); });
+            if(!allNotes.length) return showToast("Không có nốt nhạc nào!", 'error');
+
+            allNotes.sort((a,b) => a.time - b.time);
+            let resolved = []; let mode = els.optChord.value;
+            let currentBucket = []; let bucketTime = allNotes[0].time;
+
+            allNotes.forEach(n => {
+                if(Math.abs(n.time - bucketTime) < 0.02) { currentBucket.push(n); }
+                else {
+                    if(currentBucket.length) {
+                        if(mode === 'top') { currentBucket.sort((a,b) => b.midi - a.midi); resolved.push(currentBucket[0]); } 
+                        else { resolved.push(...currentBucket); }
+                    }
+                    currentBucket = [n]; bucketTime = n.time;
+                }
+            });
+            if(currentBucket.length) {
+                if(mode === 'top') { currentBucket.sort((a,b)=>b.midi-a.midi); resolved.push(currentBucket[0]); }
+                else resolved.push(...currentBucket);
+            }
+            resolved.sort((a,b) => a.time - b.time);
+
+            const toBeat = sec => sec * (state.srcBpm || 120) / 60;
+            const minRestBeat = parseFloat(els.optMinbeat.value);
+            const parsed = [];
+            let cursor = 0;
+
+            resolved.forEach((n, i) => {
+                const next = (mode === 'top') ? resolved[i + 1] : null;
+                const dur = next ? Math.min(n.duration, next.time - n.time) : n.duration;
+                const gap = toBeat(n.time - cursor);
+                if (gap >= minRestBeat) parsed.push({ isRest: true, beat: gap });
+                else if (gap > 0 && parsed.length) parsed[parsed.length - 1].beat += gap;
+                parsed.push({ isRest: false, midiNote: n.midi, beat: toBeat(dur) });
+                cursor = Math.max(cursor, n.time + dur);
+            });
+
+            state.notesData = parsed;
+            
+            if (els.chkAutofit.checked) {
+                let mds = parsed.filter(x => !x.isRest).map(x => x.midiNote);
+                let fitResult = autoFitSemitone(mds);
+                state.autoSemi = fitResult.s;
+                let text = fitResult.s >= 0 ? `+${fitResult.s}` : `${fitResult.s}`;
+                showToast(`Auto-fit: Đã dịch ${text} nửa cung; còn ${fitResult.outOfRange} nốt ngoài dải.`, 'info');
+            } else {
+                state.autoSemi = 0;
+            }
+            rebuildRawScoreFromMidi();
+            triggerConversion();
+        }
+
+        function formatMidiToDF(midi) {
+            let oct = Math.floor(midi/12) - 1;
+            let name = noteNames[((midi % 12) + 12) % 12];
+            if(oct <= 3) return name + ",";
+            if(oct === 4) return name;
+            return name + "'";
+        }
+
+        function convertStrToMidi(str) {
+            let up = str.includes("'"), down = str.includes(",");
+            let clean = str.replace(/['\,]/g, '');
+            
+            if (clean === '#3') clean = '4';
+            if (clean === '#7') { clean = '1'; up = true; down = false; }
+
+            let mapNat = {"1":0,"2":2,"3":4,"4":5,"5":7,"6":9,"7":11};
+            let mapShp = {"1":1,"2":3,"4":6,"5":8,"6":10};
+            let off = 0;
+            if(clean.startsWith('#')) off = mapShp[clean.substring(1)] !== undefined ? mapShp[clean.substring(1)] : mapNat[clean.substring(1)] || 0;
+            else off = mapNat[clean] || 0;
+
+            let m = baseMidiC4 + off;
+            const DUAL_OCT = 4;
+            
+            if (up && down) m += (DUAL_OCT - 4) * 12;
+            else if (up) m += 12;
+            else if (down) m -= 12;
+            
+            return m;
+        }
+
+        function getShift() {
+            if (!state.rawMidi) return 0;
+            if (els.chkAutofit.checked) return state.autoSemi || 0;
+            return parseInt(els.optOctave.value) * 12;
+        }
+
+        function resolveNote(item, ctx) {
+            const skipShort = state.rawMidi && item.beat < ctx.shortFilter;
+            if (item.isRest || skipShort) return { rest: true, str: '0' };
+
+            let str = item.rawStr || formatMidiToDF(item.midiNote + ctx.shift);
+            
+            if (str === '#3') str = '4';
+            else if (str === '#7') str = "1'";
+
+            const high = str.includes("'"), low = str.includes(","), sharp = str.includes('#');
+            const digit = str.replace(/['\,#]/g, '');
+            const special = ctx.useComma && str === "1'";
+            
+            let mouseArr = [];
+            if (sharp) mouseArr.push('MButton');
+            if (low) mouseArr.push('LButton');
+            if (high) mouseArr.push('RButton');
+            const mouse = special ? '' : mouseArr.join('+');
+            
+            const key = special ? ',' : (ctx.keyMap[digit] || 'z');
+            
+            const DUAL_OCT = 4;
+            const BASE = { "1":0, "2":2, "3":4, "4":5, "5":7, "6":9, "7":11 };
+            const oct = (high && low) ? DUAL_OCT : high ? 5 : low ? 3 : 4;
+            const midiPlay = (oct + 1) * 12 + BASE[digit] + ((sharp && !high && !low) ? 1 : 0);
+            
+            return { rest: false, str, key, mouse, midiPlay };
+        }
+
+        function rebuildRawScoreFromMidi() {
+            let ctx = { shift: getShift(), shortFilter: parseFloat(els.optShort.value), useComma: true, keyMap: {} };
+            let toks = [];
+            state.notesData.forEach(item => {
+                let r = resolveNote(item, ctx);
+                toks.push(item.beat === 1 ? r.str : `${r.str}:${String(item.beat)}`);
+            });
+            els.rawScore.value = toks.join(' ');
+        }
+
+        function triggerConversion(fromRaw = false) {
+            clearTimeout(state.debounceTimer);
+            state.debounceTimer = setTimeout(() => {
+                if(fromRaw) {
+                    let toks = els.rawScore.value.trim().split(/\s+/);
+                    state.notesData = [];
+                    let errors = [];
+                    const noteRegex = /^(0|(#?)([1-7])((?:'|,|,')?))(?::(\d*\.?\d+(?:e[-+]?\d+)?))?$/;
+                    
+                    toks.forEach(t => {
+                        if(!t) return;
+                        let match = t.match(noteRegex);
+                        if (!match) { errors.push(t); return; }
+                        let b = match[5] ? parseFloat(match[5]) : 1.0;
+                        if (isNaN(b)) b = 1.0;
+                        let n = match[1];
+                        if (n === '0') {
+                            state.notesData.push({ isRest: true, beat: b });
+                        } else {
+                            let sharp = match[2], digit = match[3], mod = match[4];
+                            if (sharp === '#' && (digit === '3' || digit === '7') && mod !== '') {
+                                errors.push(t); return;
+                            }
+                            let midi = convertStrToMidi(n);
+                            state.notesData.push({ isRest: false, midiNote: midi, rawStr: n, beat: b });
+                        }
+                    });
+                    if (errors.length > 0) showToast(`Đã bỏ qua ${errors.length} token lỗi`, 'warning');
+                }
+                generateScripts();
+            }, 300);
+        }
+
+        function generateScripts() {
+            if(!state.notesData.length) {
+                els.outAhk2.value = els.outAhk1.value = els.outPy.value = els.outTxt.value = "";
+                els.uiTime.innerText = "Thời lượng: 00:00";
+                return;
+            }
+
+            let ctx = {
+                shift: getShift(), msPerBeat: 60000 / state.bpm, 
+                shortFilter: parseFloat(els.optShort.value),
+                useComma: els.chkComma.checked, keyMap: state.keyMap
+            };
+
+            let engineData = []; 
+            let rawToks = [];
+            let cumBeat = 0, prevEndMs = 0;
+
+            state.notesData.forEach(item => {
+                cumBeat += item.beat;
+                const endMs = cumBeat * ctx.msPerBeat; 
+                const ms = endMs - prevEndMs;
+                prevEndMs = endMs;
+
+                let r = resolveNote(item, ctx);
+                rawToks.push(item.beat === 1 ? r.str : `${r.str}:${String(item.beat)}`);
+                engineData.push(`["${r.rest ? '' : r.key}", "${r.rest ? '' : r.mouse}", ${ms}]`);
+            });
+            
+            let totalSec = cumBeat * (60 / state.bpm);
+            let t_mm = Math.floor(totalSec/60).toString().padStart(2, '0');
+            let t_ss = Math.floor(totalSec%60).toString().padStart(2, '0');
+            els.uiTime.innerText = `Thời lượng: ${t_mm}:${t_ss}`;
+
+            els.outTxt.value = rawToks.join(' ');
+            let metaScore = rawToks.join(' ');
+            let doLoop = els.chkLoop.checked;
+            
+            let code2 = `#Requires AutoHotkey v2.0\nif not A_IsAdmin {\n    Run '*RunAs "' A_ScriptFullPath '"'\n    ExitApp\n}\n`;
+            code2 += `; META_VERSION: 2\n; META_BPM: ${state.bpm}\n; META_SCORE: ${metaScore}\n\n`;
+            code2 += `DllCall("Winmm\\timeBeginPeriod", "UInt", 1)\nOnExit(CleanUp)\n#UseHook True\n#MaxThreadsPerHotkey 2\nSetKeyDelay -1, -1\nSetMouseDelay -1\nSendMode "Event"\n\n`;
+            code2 += `global isPlaying := false, activeK := "", activeM := ""\nglobal GAP_MS := 25, MOD_LEAD_MS := 20\n\n`;
+            code2 += `QPC() {\n    static freq := 0, buf := Buffer(8)\n    if !freq {\n        DllCall("QueryPerformanceFrequency", "Ptr", buf)\n        freq := NumGet(buf, 0, "Int64")\n    }\n    DllCall("QueryPerformanceCounter", "Ptr", buf)\n    return NumGet(buf, 0, "Int64") * 1000 / freq\n}\n\n`;
+            code2 += `songData := [\n    ${engineData.join(',\n    ')}\n]\n\n`;
+            code2 += `F8:: {\n    global isPlaying\n    if isPlaying {\n        SoundBeep(300, 150)\n        Reload()\n    } else {\n        isPlaying := true\n        SoundBeep(750, 150)\n        Engine()\n        isPlaying := false\n        SoundBeep(1000, 150)\n    }\n}\nF9:: Reload()\nF10:: ExitApp()\n\n`;
+            code2 += `Engine() {\n    global isPlaying, activeK, activeM, GAP_MS, MOD_LEAD_MS\n`;
+            if(doLoop) code2 += `    Loop {\n`;
+            let idt = doLoop ? "        " : "    ";
+            code2 += `${idt}startTime := QPC()\n${idt}for item in songData {\n${idt}    if !isPlaying\n${idt}        return\n`;
+            code2 += `${idt}    k := item[1], m := item[2], ms := item[3]\n`;
+            code2 += `${idt}    if (m != "") {\n${idt}        for btn in StrSplit(m, "+")\n${idt}            Send("{" btn " down}")\n${idt}        activeM := m\n${idt}    }\n`;
+            code2 += `${idt}    if (m != "" && k != "")\n${idt}        Sleep(MOD_LEAD_MS)\n`;
+            code2 += `${idt}    if (k != "") {\n${idt}        Send("{" k " down}")\n${idt}        activeK := k\n${idt}    }\n`;
+            code2 += `${idt}    targetTime := startTime + ms\n${idt}    while (QPC() < targetTime - GAP_MS) {\n${idt}        if !isPlaying\n${idt}            return\n${idt}        Sleep(1)\n${idt}    }\n`;
+            code2 += `${idt}    ReleaseAll()\n${idt}    while (QPC() < targetTime)\n${idt}        Sleep(1)\n${idt}    startTime := targetTime\n${idt}}\n`;
+            if(doLoop) code2 += `    }\n`;
+            code2 += `}\n\nReleaseAll() {\n    global activeK, activeM\n    if (activeK != "") {\n        Send("{" activeK " up}")\n        activeK := ""\n    }\n    if (activeM != "") {\n        for btn in StrSplit(activeM, "+")\n            Send("{" btn " up}")\n        activeM := ""\n    }\n}\n\nCleanUp(*) {\n    ReleaseAll()\n    DllCall("Winmm\\timeEndPeriod", "UInt", 1)\n}`;
+            els.outAhk2.value = code2;
+
+            let code1 = `#NoEnv\n#UseHook\n#MaxThreadsPerHotkey 2\nSetBatchLines -1\nif not A_IsAdmin {\n    Run *RunAs "%A_ScriptFullPath%"\n    ExitApp\n}\n`;
+            code1 += `; META_VERSION: 2\n; META_BPM: ${state.bpm}\n; META_SCORE: ${metaScore}\n\n`;
+            code1 += `DllCall("Winmm\\timeBeginPeriod", "UInt", 1)\nOnExit, ExitRoutine\nSetKeyDelay, -1, -1\nSetMouseDelay, -1\n`;
+            code1 += `global isPlaying := 0, activeK := "", activeM := ""\nglobal GAP_MS := 25, MOD_LEAD_MS := 20\n\n`;
+            code1 += `QPC() {\n    static freq := 0\n    if !freq\n        DllCall("QueryPerformanceFrequency", "Int64*", freq)\n    DllCall("QueryPerformanceCounter", "Int64*", count)\n    return count * 1000 / freq\n}\n\n`;
+            code1 += `songData := []\n`;
+            engineData.forEach((d) => code1 += `songData.Push(${d})\n`);
+            
+            code1 += `\nF8::\n    if (isPlaying) {\n        SoundBeep, 300, 150\n        Reload\n    }\n    isPlaying := 1\n    SoundBeep, 750, 150\n`;
+            if(doLoop) code1 += `    Loop\n    {\n`;
+            code1 += `${idt}startTime := QPC()\n${idt}for index, item in songData {\n${idt}    if (!isPlaying)\n${idt}        return\n`;
+            code1 += `${idt}    k := item[1], m := item[2], ms := item[3]\n`;
+            code1 += `${idt}    if (m != "") {\n${idt}        Loop, Parse, m, +\n${idt}            Send, {%A_LoopField% down}\n${idt}        activeM := m\n${idt}    }\n`;
+            code1 += `${idt}    if (m != "" && k != "")\n${idt}        Sleep, %MOD_LEAD_MS%\n`;
+            code1 += `${idt}    if (k != "") {\n${idt}        Send, {%k% down}\n${idt}        activeK := k\n${idt}    }\n`;
+            code1 += `${idt}    targetTime := startTime + ms\n${idt}    while (QPC() < targetTime - GAP_MS) {\n${idt}        if (!isPlaying)\n${idt}            return\n${idt}        Sleep, 1\n${idt}    }\n${idt}    GoSub, ReleaseKeys\n${idt}    while (QPC() < targetTime)\n${idt}        Sleep, 1\n${idt}    startTime := targetTime\n${idt}}\n`;
+            if(doLoop) code1 += `    }\n`;
+            code1 += `    isPlaying := 0\n    SoundBeep, 1000, 150\nreturn\n\nF9:: Reload\nF10:: ExitApp\n\n`;
+            code1 += `ReleaseKeys:\n    if (activeK != "") {\n        Send, {%activeK% up}\n        activeK := ""\n    }\n    if (activeM != "") {\n        Loop, Parse, activeM, +\n            Send, {%A_LoopField% up}\n        activeM := ""\n    }\nreturn\n\n`;
+            code1 += `ExitRoutine:\n    GoSub, ReleaseKeys\n    DllCall("Winmm\\timeEndPeriod", "UInt", 1)\n    if (A_ExitReason != "Reload")\n        ExitApp\nreturn\n`;
+            els.outAhk1.value = code1;
+
+            let pyData = engineData.map(d => {
+                let j = JSON.parse(d); 
+                let m = j[1];
+                let pyM = m ? "'" + m.replace(/LButton/g, 'left').replace(/MButton/g, 'middle').replace(/RButton/g, 'right') + "'" : "None";
+                return `('${j[0]}', ${pyM}, ${j[2]/1000})`; 
+            });
+
+            let py = `import time, threading, ctypes, atexit\nfrom pynput.keyboard import Key, Controller as KC, Listener\nfrom pynput.mouse import Button, Controller as MC\n\n`;
+            py += `# META_VERSION: 2\n# META_BPM: ${state.bpm}\n# META_SCORE: ${metaScore}\n\n`;
+            py += `try:\n    ctypes.windll.winmm.timeBeginPeriod(1)\n    atexit.register(lambda: ctypes.windll.winmm.timeEndPeriod(1))\nexcept:\n    pass\n\n`;
+            py += `kb = KC()\nmouse = MC()\nplay_event = threading.Event()\nrun_id = 0\nactive_k = None\nactive_m = None\nGAP_S = 0.025\nMOD_LEAD_S = 0.020\n\n`;
+            py += `song_data = [\n    ${pyData.join(',\n    ')}\n]\n\n`;
+            py += `def release_all():\n    global active_k, active_m\n    if active_k:\n        kb.release(active_k)\n        active_k = None\n    if active_m:\n        for btn in active_m.split('+'):\n            mouse.release(getattr(Button, btn))\n        active_m = None\n\natexit.register(release_all)\n\n`;
+            py += `def alive(my_id):\n    return play_event.is_set() and my_id == run_id\n\n`;
+            py += `def engine(my_id):\n    global active_k, active_m\n    try:\n`;
+            if(doLoop) py += `        while alive(my_id):\n`;
+            idt = doLoop ? "            " : "        ";
+            py += `${idt}start_time = time.perf_counter()\n${idt}for k, m, duration in song_data:\n${idt}    if not alive(my_id):\n${idt}        return\n`;
+            py += `${idt}    if m:\n${idt}        for btn in m.split('+'):\n${idt}            mouse.press(getattr(Button, btn))\n${idt}        active_m = m\n${idt}    if m and k:\n${idt}        time.sleep(MOD_LEAD_S)\n${idt}    if k:\n${idt}        kb.press(k)\n${idt}        active_k = k\n`;
+            py += `${idt}    target = start_time + duration\n${idt}    while True:\n${idt}        r = target - time.perf_counter()\n${idt}        if r <= GAP_S: break\n${idt}        if not alive(my_id): return\n${idt}        time.sleep(r - GAP_S if r - GAP_S < 0.002 else 0.002)\n`;
+            py += `${idt}    release_all()\n${idt}    while time.perf_counter() < target:\n${idt}        pass\n${idt}    start_time = target\n`;
+            py += `    finally:\n        release_all()\n        if my_id == run_id:\n            play_event.clear()\n\n`;
+            py += `def on_press(key):\n    global run_id\n    if key == Key.f8:\n        if play_event.is_set():\n            play_event.clear()\n        else:\n            run_id += 1\n            play_event.set()\n            threading.Thread(target=engine, args=(run_id,), daemon=True).start()\n    elif key == Key.f9:\n        play_event.clear()\n    elif key == Key.f10:\n        play_event.clear()\n        release_all()\n        return False\n\nwith Listener(on_press=on_press) as listener:\n    listener.join()\n`;
+            els.outPy.value = py;
+        }
+
+        function exportMIDI() {
+            if(!state.notesData.length) return showToast("Không có nốt để xuất!", "error");
+            const midi = new Midi(); const track = midi.addTrack();
+            midi.header.setTempo(state.bpm);
+            let currentTime = 0; const secPerBeat = 60 / state.bpm;
+            let ctx = { shift: getShift(), msPerBeat: 100, shortFilter: parseFloat(els.optShort.value), useComma: false, keyMap: {} };
+
+            state.notesData.forEach(item => {
+                let r = resolveNote(item, ctx);
+                let dur = item.beat * secPerBeat;
+                if(!r.rest) track.addNote({ midi: r.midiPlay, time: currentTime, duration: dur });
+                currentTime += dur;
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(new Blob([midi.toArray()], { type: "audio/midi" }));
+            a.download = "DeltaForce_Reverse.mid"; a.click();
+            URL.revokeObjectURL(a.href); showToast("Đã xuất file MIDI!", "success");
+        }
+
+        function startAudio() {
+            if(state.isPlaying) stopAudio();
+            if(!state.notesData.length) return showToast("Không có nốt!", "error");
+            
+            let parseCtx = { shift: getShift(), msPerBeat: 60000 / state.bpm, shortFilter: parseFloat(els.optShort.value), useComma: true, keyMap: state.keyMap };
+            
+            let dummyTracker = 0.1;
+            state.uiTimeline = [];
+            state.notesData.forEach(item => {
+                let r = resolveNote(item, parseCtx);
+                let durSec = (item.beat * parseCtx.msPerBeat) / 1000;
+                state.uiTimeline.push({ start: dummyTracker, dur: durSec, rest: r.rest, str: r.str, midiPlay: r.midiPlay });
+                dummyTracker += durSec;
+            });
+            
+            const totalAudioDur = state.uiTimeline.reduce((a, n) => a + n.dur, 0);
+            if (!(totalAudioDur > 0)) return showToast("Bài có tổng thời lượng bằng 0!", "error");
+
+            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let ctx = state.audioCtx;
+            state.isPlaying = true; els.uiStatus.innerText = "Đang phát...";
+            els.btnPlay.style.background = "#fbbf24";
+            
+            let tracker = ctx.currentTime + 0.1;
+            state.uiTimeline.forEach(n => { n.start = tracker; tracker += n.dur; });
+            state.previewNodes = [];
+
+            const LOOKAHEAD = 2.0, PUMP_MS = 250;
+            let idx = 0, schedTracker = state.uiTimeline[0].start;
+            
+            function pump() {
+                if (!state.isPlaying) return;
+                while (idx < state.uiTimeline.length && schedTracker < ctx.currentTime + LOOKAHEAD) {
+                    let n = state.uiTimeline[idx];
+                    if (!n.rest) {
+                        let freq = 440 * Math.pow(2, (n.midiPlay - 69)/12);
+                        let osc1 = ctx.createOscillator(); osc1.type = 'triangle';
+                        let osc2 = ctx.createOscillator(); osc2.type = 'sawtooth';
+                        let lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5.5; 
+                        let lfoGain = ctx.createGain(); lfoGain.gain.value = 15; 
+                        lfo.connect(lfoGain); lfoGain.connect(osc1.detune); lfoGain.connect(osc2.detune);
+                        
+                        let filter = ctx.createBiquadFilter(); filter.type = 'bandpass';
+                        filter.frequency.value = freq * 1.5; filter.Q.value = 1.2;
+                        let gain = ctx.createGain();
+                        
+                        let atk = 0.03, rel = Math.min(0.08, n.dur*0.2), sus = Math.max(0, n.dur - atk - rel);
+                        gain.gain.setValueAtTime(0.001, schedTracker);
+                        gain.gain.linearRampToValueAtTime(0.28, schedTracker + atk);
+                        gain.gain.setValueAtTime(0.24, schedTracker + atk + sus);
+                        gain.gain.linearRampToValueAtTime(0.001, schedTracker + n.dur);
+
+                        osc1.frequency.value = freq; osc2.frequency.value = freq * 2;
+                        osc1.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+                        
+                        osc1.onended = () => {
+                            state.previewNodes = state.previewNodes.filter(nd => nd !== osc1 && nd !== osc2 && nd !== lfo);
+                        };
+
+                        osc1.start(schedTracker); osc2.start(schedTracker); lfo.start(schedTracker);
+                        osc1.stop(schedTracker + n.dur); osc2.stop(schedTracker + n.dur); lfo.stop(schedTracker + n.dur);
+                        
+                        state.previewNodes.push(osc1, osc2, lfo);
+                    }
+                    schedTracker += n.dur;
+                    idx++;
+                    if (idx >= state.uiTimeline.length && els.chkLoop.checked) {
+                        idx = 0;
+                    }
+                }
+                state.pumpTimer = setTimeout(pump, PUMP_MS);
+            }
+            pump();
+
+            let startTime = state.uiTimeline[0].start;
+            let totalDur = totalAudioDur;
+            
+            function updateUI() {
+                if(!state.isPlaying) return;
+                let now = ctx.currentTime;
+                let elapsed = now - startTime;
+                
+                if (els.chkLoop.checked) elapsed = elapsed % totalDur;
+                if (!els.chkLoop.checked && elapsed >= totalDur) { stopAudio(); els.uiStatus.innerText = "Hoàn thành"; return; }
+                
+                let mm = Math.floor(elapsed/60).toString().padStart(2, '0');
+                let ss = Math.floor(elapsed%60).toString().padStart(2, '0');
+                let t_mm = Math.floor(totalDur/60).toString().padStart(2, '0');
+                let t_ss = Math.floor(totalDur%60).toString().padStart(2, '0');
+                els.uiTime.innerText = `Thời lượng: ${mm}:${ss} / ${t_mm}:${t_ss}`;
+                
+                let active = null;
+                const phase = els.chkLoop.checked ? startTime + ((now - startTime) % totalDur) : now;
+                let lo = 0, hi = state.uiTimeline.length - 1;
+                while (lo <= hi) {
+                    const mid = (lo + hi) >> 1;
+                    const n = state.uiTimeline[mid];
+                    if (phase < n.start) hi = mid - 1;
+                    else if (phase >= n.start + n.dur) lo = mid + 1;
+                    else { active = n; break; }
+                }
+                
+                document.querySelectorAll('.visualizer-pad').forEach(e => e.classList.remove('key-active'));
+                ['left','mid','right'].forEach(p => document.getElementById(`mouse-${p}-pad`).classList.remove('mouse-active'));
+                
+                if(active) {
+                    els.uiNote.innerText = `Nốt: ${active.str}`;
+                    if(!active.rest) {
+                        let clean = active.str.replace(/['\,#]/g, '');
+                        let pad = document.getElementById(`pad-${clean}`);
+                        if(pad) pad.classList.add('key-active');
+                        if(active.str.includes("'")) document.getElementById('mouse-right-pad').classList.add('mouse-active');
+                        if(active.str.includes(",")) document.getElementById('mouse-left-pad').classList.add('mouse-active');
+                        if(active.str.includes("#")) document.getElementById('mouse-mid-pad').classList.add('mouse-active');
+                    }
+                }
+                
+                state.uiTimer = requestAnimationFrame(updateUI);
+            }
+            updateUI();
+        }
+
+        function stopAudio() {
+            state.isPlaying = false;
+            clearTimeout(state.pumpTimer);
+            cancelAnimationFrame(state.uiTimer);
+            if(state.audioCtx && state.audioCtx.state !== 'closed') {
+                state.previewNodes.forEach(n => { try{ n.stop(); n.disconnect(); }catch(e){} });
+                state.audioCtx.close();
+            }
+            els.btnPlay.style.background = ""; els.uiStatus.innerText = "Sẵn sàng";
+            els.uiNote.innerText = "Nốt: --";
+            document.querySelectorAll('.visualizer-pad').forEach(e => e.classList.remove('key-active'));
+            ['left','mid','right'].forEach(p => document.getElementById(`mouse-${p}-pad`).classList.remove('mouse-active'));
+            
+            if(state.notesData.length) {
+                let totalSec = state.notesData.reduce((a, n) => a + n.beat, 0) * (60 / state.bpm);
+                let t_mm = Math.floor(totalSec/60).toString().padStart(2, '0');
+                let t_ss = Math.floor(totalSec%60).toString().padStart(2, '0');
+                els.uiTime.innerText = `Thời lượng: ${t_mm}:${t_ss}`;
+            }
+        }
+    </script>
+</body>
+</html>
